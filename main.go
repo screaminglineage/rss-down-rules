@@ -26,8 +26,9 @@ func help(verbose bool) {
 	verbose_help :=
 		`The Input File must be formatted according to the syntax
     	[Search Term]|[Entry Title]|[Save Path]
-    	eg.
-    	made in abyss|Made in Abyss|/home/username/Videos/Made in Abyss
+		
+	Eg:-
+	hunter x hunter|Hunter x Hunter|/home/$USER/Videos/Hunter x Hunter
 
     	The terms must be entered in this order but skipped terms will
     	be ignored and set to the default values --
