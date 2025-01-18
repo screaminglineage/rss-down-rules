@@ -12,7 +12,6 @@ import (
 const RSS_FEED = "https://subsplease.org/rss/?r=1080"
 
 // Default Values (if not specified)
-const DEFAULT_OUTPUT_FILE = "anime.json"
 
 // TODO: get $USER from env
 const ANIME_DIR_LINUX = "/home/aditya/Videos/Anime/"
@@ -63,14 +62,14 @@ options:
 	fmt.Println(options)
 }
 
-func writeJSON(output_file_path string, fileData []DownloadTitle, platform string) {
-	json := generateJSON(fileData, platformDownloadDir[platform])
+func writeJSON(output_file_path string, fileData []DownloadTitle, platformDownloadDir string) {
+	json := generateJSON(fileData, platformDownloadDir)
 
-	err := os.WriteFile(DEFAULT_OUTPUT_FILE, json, 0666)
+	err := os.WriteFile(output_file_path, json, 0666)
 	if err != nil {
 		log.Fatalf("%s\n", err.Error())
 	}
-	log.Printf("Succesfully Generated: %s.json", output_file_path)
+	log.Printf("Succesfully Generated: %s", output_file_path)
 }
 
 func generateAndWriteJSON(input_file_path string, platform string) {
@@ -81,74 +80,21 @@ func generateAndWriteJSON(input_file_path string, platform string) {
 		log.Fatalf("%s\n", err.Error())
 	}
 	log.Println("Reading from file: ", input_file_path)
-
 	fileData := parseFile(string(data))
-	output_file_path := strings.TrimSuffix(input_file_path, path.Ext(input_file_path))
+
+	output_file := strings.TrimSuffix(input_file_path, path.Ext(input_file_path))
 	if platform == "all" {
-		writeJSON(output_file_path, fileData, "linux")
-		writeJSON(output_file_path, fileData, "windows")
+		writeJSON(fmt.Sprintf("%s_linux.json", output_file), fileData, platformDownloadDir["linux"])
+		writeJSON(fmt.Sprintf("%s_windows.json", output_file), fileData, platformDownloadDir["windows"])
 	} else {
-		writeJSON(output_file_path, fileData, platformDownloadDir[platform])
+		writeJSON(fmt.Sprintf("%s.json", output_file), fileData, platformDownloadDir[platform])
 	}
 }
 
 func main() {
-	log := log.New(os.Stderr, "", 0)
-	cmdArgs := make(map[string]string)
-	i := 1
-	for i < len(os.Args) {
-		arg := os.Args[i]
-
-		if arg == "-h" {
-			help(false)
-			os.Exit(0)
-		} else if arg == "--help" {
-			help(true)
-			os.Exit(0)
-		} else if arg == "-w" || arg == "--windows" {
-			cmdArgs["platform"] = "windows"
-		} else if arg == "-l" || arg == "--linux" {
-			cmdArgs["platform"] = "linux"
-		} else if arg == "-d" || arg == "--download" {
-			if i+1 >= len(os.Args) {
-				help(false)
-				log.Fatalf("Expected download path after argument: `%s`", arg)
-			}
-			cmdArgs["downloadPath"] = os.Args[i+1]
-			i += 1
-		} else if arg == "-r" || arg == "--rss" {
-			if i+1 >= len(os.Args) {
-				help(false)
-				log.Fatalf("Expected URL after argument: `%s`", arg)
-			}
-			cmdArgs["rssURL"] = os.Args[i+1]
-			i += 1
-
-		} else {
-			inputFilePath := arg
-			if strings.HasPrefix(inputFilePath, "-") {
-				help(false)
-				if inputFilePath == "-help" {
-					log.Fatalf("Unexpected argument found: `%s`, try `--help` instead for verbose help\n", inputFilePath)
-				}
-				log.Fatalf("Unexpected argument found: `%s`\n", inputFilePath)
-			}
-			cmdArgs["inputFilePath"] = inputFilePath
-		}
-		i += 1
-	}
-	if inputFilePath, ok := cmdArgs["inputFilePath"]; ok {
-		platform, ok := cmdArgs["platform"]
-		if !ok {
-			platform = DEFAULT_PLATFORM
-		}
-		generateAndWriteJSON(inputFilePath, platform)
-
-	} else {
-		help(true)
-		log.Fatal("Expected input file path")
-	}
-
+	// TODO: pass in the logger into each function
+	log.New(os.Stderr, "", 0)
+ 	generateAndWriteJSON(os.Args[1], os.Args[2])
 }
 
 type DownloadTitle struct {
