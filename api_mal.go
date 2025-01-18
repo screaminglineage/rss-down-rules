@@ -133,7 +133,7 @@ type AuthToken struct {
 }
 
 const TOKEN_FILE = "token.json"
-func main() {
+func api_mal() {
 	var tokenString []byte
 	tokenString, err := os.ReadFile(TOKEN_FILE)
 	if os.IsNotExist(err) {
