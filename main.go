@@ -62,7 +62,7 @@ options:
 	fmt.Println(options)
 }
 
-func writeJSON(output_file_path string, fileData []DownloadTitle, platformDownloadDir string) {
+func writeJSON(output_file_path string, platformDownloadDir string, fileData []DownloadTitle) {
 	json := generateJSON(fileData, platformDownloadDir)
 
 	err := os.WriteFile(output_file_path, json, 0666)
@@ -92,8 +92,7 @@ func generateAndWriteJSON(input_file_path string, platform string) {
 }
 
 func main() {
-	// TODO: pass in the logger into each function
-	log.New(os.Stderr, "", 0)
+	log.SetFlags(0)
  	generateAndWriteJSON(os.Args[1], os.Args[2])
 }
 
