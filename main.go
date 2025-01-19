@@ -53,6 +53,7 @@ options:
     -l 			generate file with download paths for linux
     -d, <filepath>	specify download path
     -r, <URL>		specify custom RSS feed URL
+    -mal		get plan to watch anime from MyAnimeList
     -h			show help message
     -H			show verbose help message`
 
@@ -65,18 +66,7 @@ options:
 	fmt.Println(options)
 }
 
-func generateAndWriteJson(inputFilePath string, rssFeedUrl string, platform string, downloadDir string) {
-	data, err := os.ReadFile(inputFilePath)
-	if err != nil {
-		printHelp(false)
-		fmt.Println()
-		log.Fatalf("%s\n", err.Error())
-	}
-	log.Println("Reading from file: ", inputFilePath)
-	fileData := parseFile(string(data))
-
-	outputFile := strings.TrimSuffix(inputFilePath, path.Ext(inputFilePath))
-
+func generateAndWriteJson(downloadTitles []DownloadTitle, outputFilePath string, rssFeedUrl string, platform string, downloadDir string) {
 	if platform == "all" {
 		linuxDownloadDir := downloadDirMap["linux"]
 		windowsDownloadDir := downloadDirMap["windows"]
@@ -84,14 +74,14 @@ func generateAndWriteJson(inputFilePath string, rssFeedUrl string, platform stri
 			linuxDownloadDir = downloadDir
 			windowsDownloadDir = downloadDir
 		}
-		writeJson(fmt.Sprintf("%s_linux.json", outputFile), rssFeedUrl, linuxDownloadDir, fileData)
-		writeJson(fmt.Sprintf("%s_windows.json", outputFile), rssFeedUrl, windowsDownloadDir, fileData)
+		writeJson(fmt.Sprintf("%s_linux.json", outputFilePath), rssFeedUrl, linuxDownloadDir, downloadTitles)
+		writeJson(fmt.Sprintf("%s_windows.json", outputFilePath), rssFeedUrl, windowsDownloadDir, downloadTitles)
 	} else {
 		platformDownloadDir := downloadDirMap[platform]
 		if downloadDir != "" {
 			platformDownloadDir = downloadDir
 		}
-		writeJson(fmt.Sprintf("%s.json", outputFile), rssFeedUrl, platformDownloadDir, fileData)
+		writeJson(fmt.Sprintf("%s.json", outputFilePath), rssFeedUrl, platformDownloadDir, downloadTitles)
 	}
 }
 
@@ -104,6 +94,7 @@ func main() {
 	helpVerbose := flag.Bool("H", false, "")
 	downloadDir := flag.String("d", "", "")
 	rssFeedUrl := flag.String("r", defaultRssFeedUrl, "")
+	getPlanToWatch := flag.Bool("mal", false, "")
 	flag.Usage = func() { fmt.Println(); printHelp(false) }
 	flag.Parse()
 
@@ -112,13 +103,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	if flag.NArg() == 0 {
-		fmt.Printf("No input file provided!\n\n")
-		printHelp(false)
-		os.Exit(1)
-	}
-	inputFilePath := flag.Args()[0]
-
 	platform := defaultPlatform
 	if *platformLinux && !*platformWindows {
 		platform = "linux"
@@ -126,14 +110,43 @@ func main() {
 		platform = "windows"
 	}
 
-	generateAndWriteJson(inputFilePath, *rssFeedUrl, platform, *downloadDir)
+	var downloadTitles []DownloadTitle
+	var outputFilePath string
+	if *getPlanToWatch {
+		planToWatchAnime := GetPlanToWatchAnime()
+		downloadTitles = make([]DownloadTitle, 0)
+		for _, animeTitle := range planToWatchAnime {
+			downloadTitles = append(downloadTitles, DownloadTitle{animeTitle, "", ""})
+		}
+		outputFilePath = "anime"
+	} else {
+		if flag.NArg() == 0 {
+			fmt.Printf("No input file provided!\n\n")
+			printHelp(false)
+			os.Exit(1)
+		}
+		inputFilePath := flag.Args()[0]
+		outputFilePath = strings.TrimSuffix(inputFilePath, path.Ext(inputFilePath))
+		downloadTitles = parseFile(inputFilePath)
+	}
+
+	generateAndWriteJson(downloadTitles, outputFilePath, *rssFeedUrl, platform, *downloadDir)
 }
 
 type DownloadTitle struct {
 	SearchTerm, Title, SavePath string
 }
 
-func parseFile(contents string) []DownloadTitle {
+func parseFile(path string) []DownloadTitle {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		printHelp(false)
+		fmt.Println()
+		log.Fatalf("%s\n", err.Error())
+	}
+	log.Println("Reading from file: ", path)
+
+	contents := string(data)
 	downloadTitles := make([]DownloadTitle, 0)
 
 	// Supports windows new lines
