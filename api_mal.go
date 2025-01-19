@@ -1,15 +1,15 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"encoding/json"
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
+	"os"
 )
 
 const MAL_API = "https://api.myanimelist.net/v2"
@@ -25,26 +25,26 @@ func generateCodeChallenge() string {
 
 func requestAccessToken() []byte {
 	codeChallenge := generateCodeChallenge()
-	authorizeUrl :=  "https://myanimelist.net/v1/oauth2/authorize"
+	authorizeUrl := "https://myanimelist.net/v1/oauth2/authorize"
 	params := url.Values{}
 	params.Add("response_type", "code")
-	params.Add("client_id",  "f0329e8fef42bf30a44e42dd24e25675")
+	params.Add("client_id", "f0329e8fef42bf30a44e42dd24e25675")
 	params.Add("code_challenge", codeChallenge)
 	params.Add("state", "RequestID2235")
 
 	authUrl := authorizeUrl + "?" + params.Encode()
 	fmt.Println(authUrl)
-	fmt.Print("Enter auth token: ");
+	fmt.Print("Enter auth token: ")
 	var authCode string
 	fmt.Scanf("%s", &authCode)
 
-	oauthUrl :=  "https://myanimelist.net/v1/oauth2/token"
+	oauthUrl := "https://myanimelist.net/v1/oauth2/token"
 	params = url.Values{}
 	params.Add("client_id", "f0329e8fef42bf30a44e42dd24e25675")
 	params.Add("code", authCode)
 	params.Add("code_verifier", codeChallenge)
 	params.Add("grant_type", "authorization_code")
-	
+
 	res, err := http.Post(oauthUrl, "application/x-www-form-urlencoded", bytes.NewBufferString(params.Encode()))
 	body, err := io.ReadAll(res.Body)
 	res.Body.Close()
@@ -62,7 +62,7 @@ type Season struct {
 	// season must be one of "winter",
 	// "summer", "spring", or "fall"
 	Season string
-	Year int
+	Year   int
 }
 
 // Winter 2025
@@ -72,15 +72,15 @@ func getPlanToWatch(accessToken string, season Season) []string {
 	planToWatchAnime := make([]string, 0)
 
 	params := url.Values{}
-	params.Add("status", "plan_to_watch");
-	params.Add("fields", "start_season");
+	params.Add("status", "plan_to_watch")
+	params.Add("fields", "start_season")
 	url := fmt.Sprintf("%s/users/@me/animelist?%s", MAL_API, params.Encode())
 	for {
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			log.Fatal(err)
 		}
-		req.Header.Add("Authorization", "Bearer " + accessToken)
+		req.Header.Add("Authorization", "Bearer "+accessToken)
 
 		client := http.Client{}
 		res, err := client.Do(req)
@@ -88,7 +88,7 @@ func getPlanToWatch(accessToken string, season Season) []string {
 			log.Fatal(err)
 		}
 		defer res.Body.Close()
-	
+
 		body, err := io.ReadAll(res.Body)
 		res.Body.Close()
 		if res.StatusCode > 299 {
@@ -109,12 +109,12 @@ func getPlanToWatch(accessToken string, season Season) []string {
 		for i := range animeData {
 			anime := animeData[i].(map[string]any)["node"].(map[string]any)
 			seasonJson, ok := anime["start_season"].(map[string]any)
-			
+
 			if ok && int(seasonJson["year"].(float64)) == season.Year && seasonJson["season"].(string) == season.Season {
 				planToWatchAnime = append(planToWatchAnime, anime["title"].(string))
 			}
 		}
-		
+
 		paging := jsonData["paging"].(map[string]any)
 		nextUrl, found := paging["next"]
 		if !found {
@@ -126,13 +126,14 @@ func getPlanToWatch(accessToken string, season Season) []string {
 }
 
 type AuthToken struct {
-	TokenType string    `json:"token_type"`
-	ExpiresIn int       `json:"expires_in"`
-	AccessToken string  `json:"access_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int    `json:"expires_in"`
+	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
 
 const TOKEN_FILE = "token.json"
+
 func api_mal() {
 	var tokenString []byte
 	tokenString, err := os.ReadFile(TOKEN_FILE)
@@ -147,13 +148,13 @@ func api_mal() {
 		tokenString = []byte(accessTokenString)
 	}
 
-	var accessToken AuthToken 
+	var accessToken AuthToken
 	err = json.Unmarshal(tokenString, &accessToken)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("Making Request")
 	// TODO: get season from the current date
-	planToWatchAnime := getPlanToWatch(accessToken.AccessToken, Season{"winter", 2025})
+	planToWatchAnime := getPlanToWatch(accessToken.AccessToken, Season{"spring", 2025})
 	fmt.Println(planToWatchAnime)
 }

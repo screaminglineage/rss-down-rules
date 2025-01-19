@@ -15,7 +15,7 @@ const RSS_FEED = "https://subsplease.org/rss/?r=1080"
 
 // TODO: get $USER from env
 const ANIME_DIR_LINUX = "/home/aditya/Videos/Anime/"
-const ANIME_DIR_WINDOWS = "D:\\\\Libraries\\\\Videos\\\\Anime\\\\"
+const ANIME_DIR_WINDOWS = `D:\\Libraries\\Videos\\Anime\\`
 const DEFAULT_PLATFORM = "all"
 
 var platformDownloadDir = map[string]string{
@@ -26,32 +26,32 @@ var platformDownloadDir = map[string]string{
 func help(verbose bool) {
 	help :=
 		`usage: rss-down-rules [input-file]
-    	Automatically generates a JSON file containing RSS downloader rules for qbittorrent`
+    Automatically generates a JSON file containing RSS downloader rules for qbittorrent`
 
 	verbose_help :=
 		`The Input File must be formatted according to the syntax
-    	[Search Term]|[Entry Title]|[Save Path]
-		
-	Eg:-
-	hunter x hunter|Hunter x Hunter|/home/$USER/Videos/Hunter x Hunter
+    [Search Term]|[Entry Title]|[Save Path]
 
-    	The terms must be entered in this order but skipped terms will
-    	be ignored and set to the default values --
+    Eg:-
+    hunter x hunter|Hunter x Hunter|/home/$USER/Videos/Hunter x Hunter
 
-    	'Search Term' - Cannot be Skipped
-    	'Entry Title' - Will be set to same as the Search Term
-    	'Save Path' - Will be set to /home/aditya/Videos/Anime/[Search Term]`
+    The terms must be entered in this order but skipped terms will
+    be ignored and set to the default values --
+
+    'Search Term' - Cannot be Skipped
+    'Entry Title' - Will be set to same as the Search Term
+    'Save Path' - Will be set to /home/aditya/Videos/Anime/[Search Term]`
 
 	options :=
 		`positional arguments:
-  input-file                 file to create JSON from
- 
-options:
-  -w, --windows				generate file with download paths for windows
-  -l, --linux				generate file with download paths for linux
-  -d, --download <filepath>	specify download path
-  -r, --rss <URL>			specify custom rss URL
-  -h, --help				show help message (--help shows verbose help)`
+    input-file                 file to create JSON from
+
+    options:
+    -w, --windows				generate file with download paths for windows
+    -l, --linux				generate file with download paths for linux
+    -d, --download <filepath>	specify download path
+    -r, --rss <URL>			specify custom rss URL
+    -h, --help				show help message (--help shows verbose help)`
 
 	fmt.Println(help)
 	if verbose {
@@ -84,16 +84,16 @@ func generateAndWriteJSON(input_file_path string, platform string) {
 
 	output_file := strings.TrimSuffix(input_file_path, path.Ext(input_file_path))
 	if platform == "all" {
-		writeJSON(fmt.Sprintf("%s_linux.json", output_file), fileData, platformDownloadDir["linux"])
-		writeJSON(fmt.Sprintf("%s_windows.json", output_file), fileData, platformDownloadDir["windows"])
+		writeJSON(fmt.Sprintf("%s_linux.json", output_file), platformDownloadDir["linux"], fileData)
+		writeJSON(fmt.Sprintf("%s_windows.json", output_file), platformDownloadDir["windows"], fileData)
 	} else {
-		writeJSON(fmt.Sprintf("%s.json", output_file), fileData, platformDownloadDir[platform])
+		writeJSON(fmt.Sprintf("%s.json", output_file), platformDownloadDir[platform], fileData)
 	}
 }
 
 func main() {
 	log.SetFlags(0)
- 	generateAndWriteJSON(os.Args[1], os.Args[2])
+	generateAndWriteJSON(os.Args[1], os.Args[2])
 }
 
 type DownloadTitle struct {
@@ -139,25 +139,25 @@ func generateJSON(download_titles []DownloadTitle, downloadDir string) []byte {
 		}
 		json_data := fmt.Sprintf(
 			`
-			"%s": {
-				"addPaused": null,
-				"affectedFeeds": [
-					"%s"
-				],
-				"assignedCategory": "",
-				"enabled": true,
-				"episodeFilter": "",
-				"ignoreDays": 0,
-				"lastMatch": "",
-				"mustContain": "%s",
-				"mustNotContain": "",
-				"previouslyMatchedEpisodes": [
-				],
-				"savePath": "%s",
-				"smartFilter": true,
-				"torrentContentLayout": null,
-				"useRegex": false
-			}`, title.title, RSS_FEED, title.search_term, title.save_path)
+            "%s": {
+            "addPaused": null,
+            "affectedFeeds": [
+            "%s"
+            ],
+            "assignedCategory": "",
+            "enabled": true,
+            "episodeFilter": "",
+            "ignoreDays": 0,
+            "lastMatch": "",
+            "mustContain": "%s",
+            "mustNotContain": "",
+            "previouslyMatchedEpisodes": [
+            ],
+            "savePath": "%s",
+            "smartFilter": true,
+            "torrentContentLayout": null,
+            "useRegex": false
+            }`, title.title, RSS_FEED, title.search_term, title.save_path)
 		json_string = append(json_string, json_data...)
 
 		// Skip Trailing Comma
