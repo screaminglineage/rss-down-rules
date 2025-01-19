@@ -114,6 +114,9 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Generating input file from Plan to Watch list
+	// Cannot generate the RSS feed directly as the search terms
+	// may not be always correct and need manual intervention
 	if *getPlanToWatch {
 		planToWatch := GetPlanToWatchAnime()
 		var planToWatchString strings.Builder
@@ -132,6 +135,7 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Generating rss feed from input file
 	if flag.NArg() == 0 {
 		fmt.Printf("No input file provided!\n\n")
 		printHelp(false)
