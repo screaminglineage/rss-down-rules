@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -23,10 +24,10 @@ var platformDownloadDir = map[string]string{
 	"windows": ANIME_DIR_WINDOWS,
 }
 
-func help(verbose bool) {
+func print_help(verbose bool) {
 	help :=
 		`usage: rss-down-rules [input-file]
-    Automatically generates a JSON file containing RSS downloader rules for qbittorrent`
+Automatically generates a JSON file containing RSS downloader rules for qbittorrent`
 
 	verbose_help :=
 		`The Input File must be formatted according to the syntax
@@ -46,12 +47,13 @@ func help(verbose bool) {
 		`positional arguments:
     input-file                 file to create JSON from
 
-    options:
-    -w, --windows				generate file with download paths for windows
-    -l, --linux				generate file with download paths for linux
-    -d, --download <filepath>	specify download path
-    -r, --rss <URL>			specify custom rss URL
-    -h, --help				show help message (--help shows verbose help)`
+options:
+    -w 				generate file with download paths for windows
+    -l 				generate file with download paths for linux
+    -d, <filepath>	        specify download path
+    -r, <URL>		        specify custom rss URL
+    -h				show help message
+    -H				show verbose help message`
 
 	fmt.Println(help)
 	if verbose {
@@ -72,10 +74,10 @@ func writeJSON(output_file_path string, platformDownloadDir string, fileData []D
 	log.Printf("Succesfully Generated: %s", output_file_path)
 }
 
-func generateAndWriteJSON(input_file_path string, platform string) {
+func generateAndWriteJSON(input_file_path string, platform string, download_dir string) {
 	data, err := os.ReadFile(input_file_path)
 	if err != nil {
-		help(false)
+		print_help(false)
 		fmt.Println()
 		log.Fatalf("%s\n", err.Error())
 	}
@@ -83,17 +85,52 @@ func generateAndWriteJSON(input_file_path string, platform string) {
 	fileData := parseFile(string(data))
 
 	output_file := strings.TrimSuffix(input_file_path, path.Ext(input_file_path))
+
+	linux_download_dir := platformDownloadDir["linux"]
+	windows_download_dir := platformDownloadDir["windows"]
+	if download_dir != "" {
+		linux_download_dir = download_dir
+		windows_download_dir = download_dir
+	}
 	if platform == "all" {
-		writeJSON(fmt.Sprintf("%s_linux.json", output_file), platformDownloadDir["linux"], fileData)
-		writeJSON(fmt.Sprintf("%s_windows.json", output_file), platformDownloadDir["windows"], fileData)
+		writeJSON(fmt.Sprintf("%s_linux.json", output_file), linux_download_dir, fileData)
+		writeJSON(fmt.Sprintf("%s_windows.json", output_file), windows_download_dir, fileData)
 	} else {
-		writeJSON(fmt.Sprintf("%s.json", output_file), platformDownloadDir[platform], fileData)
+		writeJSON(fmt.Sprintf("%s.json", output_file), download_dir, fileData)
 	}
 }
 
 func main() {
 	log.SetFlags(0)
-	generateAndWriteJSON(os.Args[1], os.Args[2])
+
+	platform_linux := flag.Bool("l", false, "generate file with download paths for linux")
+	platform_windows := flag.Bool("w", false, "generate file with download paths for windows")
+	help := flag.Bool("h", false, "show help")
+	help_verbose := flag.Bool("H", false, "show verbose help")
+	download_dir := flag.String("d", "", "specify download path")
+	flag.Usage = func() { fmt.Println(); print_help(false) }
+	flag.Parse()
+
+	if *help || *help_verbose {
+		print_help(*help_verbose)
+		return
+	}
+
+	if flag.NArg() == 0 {
+		fmt.Printf("No input file provided\n\n")
+		print_help(false)
+		return
+	}
+	input_file_path := flag.Args()[0]
+
+	platform := "all"
+	if *platform_linux && !*platform_windows {
+		platform = "linux"
+	} else if *platform_windows && !*platform_linux {
+		platform = "windows"
+	}
+
+	generateAndWriteJSON(input_file_path, platform, *download_dir)
 }
 
 type DownloadTitle struct {
@@ -135,7 +172,7 @@ func generateJSON(download_titles []DownloadTitle, downloadDir string) []byte {
 			title.title = title.search_term
 		}
 		if title.save_path == "" {
-			title.save_path = downloadDir + title.title
+			title.save_path = downloadDir + "/" + title.title
 		}
 		json_data := fmt.Sprintf(
 			`
