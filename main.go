@@ -53,7 +53,8 @@ options:
     -l 			generate file with download paths for linux
     -d, <filepath>	specify download path
     -r, <URL>		specify custom RSS feed URL
-    -mal        generate input file from MyAnimeList plan to watch
+    -mal                generate input file from MyAnimeList plan to watch for next season
+    -c                  get list for current season instead of next season when using '-mal'
     -h			show help message
     -H			show verbose help message`
 
@@ -106,6 +107,7 @@ func main() {
 	downloadDir := flag.String("d", "", "")
 	rssFeedUrl := flag.String("r", defaultRssFeedUrl, "")
 	getPlanToWatch := flag.Bool("mal", false, "")
+	currentSeason := flag.Bool("c", false, "")
 	flag.Usage = func() { fmt.Println(); printHelp(false) }
 	flag.Parse()
 
@@ -118,7 +120,7 @@ func main() {
 	// Cannot generate the RSS feed directly as the search terms
 	// may not be always correct and need manual intervention
 	if *getPlanToWatch {
-		planToWatch := GetPlanToWatchAnime()
+		planToWatch := GetPlanToWatchAnime(*currentSeason)
 		var planToWatchString strings.Builder
 		for _, anime := range planToWatch {
 			fmt.Fprintf(&planToWatchString, "%s|%s\n", anime, anime)
@@ -127,7 +129,7 @@ func main() {
 		if err := os.WriteFile(outputFile, []byte(planToWatchString.String()), 0666); err != nil {
 			log.Fatal(err)
 		}
-		log.Printf("Succesfully Generated: %s", outputFile)
+		log.Printf("Successfully Generated: %s", outputFile)
 		os.Exit(0)
 	}
 
@@ -224,5 +226,5 @@ func writeJson(outputFilePath string, rssFeedUrl string, downloadDir string, dow
 	if err != nil {
 		log.Fatalf("%s\n", err.Error())
 	}
-	log.Printf("Succesfully Generated: %s", outputFilePath)
+	log.Printf("Successfully Generated: %s", outputFilePath)
 }

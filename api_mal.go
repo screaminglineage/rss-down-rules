@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
+	"unicode"
 )
 
 const MAL_API = "https://api.myanimelist.net/v2"
@@ -131,7 +133,45 @@ type AuthToken struct {
 
 const TOKEN_FILE = "token.json"
 
-func GetPlanToWatchAnime() []string {
+func getCurrentSeason() Season {
+	year, month, _ := time.Now().Date()
+	var season string
+	switch {
+	case time.January <= month && month <= time.March:
+		season = "winter"
+	case time.April <= month && month <= time.June:
+		season = "spring"
+	case time.July <= month && month <= time.September:
+		season = "summer"
+	case time.October <= month && month <= time.December:
+		season = "fall"
+	}
+
+	return Season{season, year}
+}
+
+func getNextSeason() Season {
+	year, month, _ := time.Now().Date()
+	var season string
+	switch {
+	case time.January <= month && month <= time.March:
+		season = "spring"
+	case time.April <= month && month <= time.June:
+		season = "summer"
+	case time.July <= month && month <= time.September:
+		season = "fall"
+	case time.October <= month && month <= time.December:
+		season = "winter"
+	}
+
+	if season == "winter" {
+		year += 1
+	}
+
+	return Season{season, year}
+}
+
+func GetPlanToWatchAnime(currentSeason bool) []string {
 	var tokenString []byte
 	tokenString, err := os.ReadFile(TOKEN_FILE)
 	if os.IsNotExist(err) {
@@ -150,7 +190,18 @@ func GetPlanToWatchAnime() []string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Retrieving Plan To Watch List from MyAnimeList API...")
-	// TODO: get season from the current date
-	return planToWatchApiCall(accessToken.AccessToken, Season{"spring", 2025})
+
+	var season Season
+	if currentSeason {
+		season = getCurrentSeason()
+	} else {
+		season = getNextSeason()
+	}
+
+	// only easy way to quickly convert a string to Titlecase
+	fmt.Printf("Retrieving Plan To Watch List for %c%s %d from MyAnimeList...\n",
+		unicode.ToUpper(rune(season.Season[0])), season.Season[1:],
+		season.Year,
+	)
+	return planToWatchApiCall(accessToken.AccessToken, season)
 }
