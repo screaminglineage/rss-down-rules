@@ -26,7 +26,8 @@ var downloadDirMap = map[string]string{
 
 func printHelp(verbose bool) {
 	help :=
-		`usage: rss-down-rules [input-file]
+		`usage: rss-down-rules [-l|-w|-r|-d|-h|-H] <input-file>
+
 Automatically generates a JSON file containing RSS downloader rules for qbittorrent`
 
 	verboseHelp :=
@@ -45,15 +46,15 @@ Automatically generates a JSON file containing RSS downloader rules for qbittorr
 
 	options :=
 		`positional arguments:
-    input-file                 file to create JSON from
+    <input-file>        file to create JSON from (must come after flags)
 
 options:
-    -w 				generate file with download paths for windows
-    -l 				generate file with download paths for linux
-    -d, <filepath>	        specify download path
-    -r, <URL>		        specify custom RSS feed URL
-    -h				show help message
-    -H				show verbose help message`
+    -w 			generate file with download paths for windows
+    -l 			generate file with download paths for linux
+    -d, <filepath>	specify download path
+    -r, <URL>		specify custom RSS feed URL
+    -h			show help message
+    -H			show verbose help message`
 
 	fmt.Println(help)
 	if verbose {
