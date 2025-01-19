@@ -16,6 +16,7 @@ The terms must be entered in this order but skipped terms will be ignored and se
 
 ## TODO
 - Look into refreshing the API token when it expires
+- Customize save location for the `token.json` file
 - Implement auto detection of save path for both Linux and Windows
     - detect `$USER` directory for both
 - maybe customize more features of the RSS feed generated
