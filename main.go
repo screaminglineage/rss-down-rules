@@ -53,6 +53,7 @@ options:
     -l 			generate file with download paths for linux
     -d, <filepath>	specify download path
     -r, <URL>		specify custom RSS feed URL
+    -mal        generate input file from MyAnimeList plan to watch
     -h			show help message
     -H			show verbose help message`
 
@@ -104,11 +105,30 @@ func main() {
 	helpVerbose := flag.Bool("H", false, "")
 	downloadDir := flag.String("d", "", "")
 	rssFeedUrl := flag.String("r", defaultRssFeedUrl, "")
+	getPlanToWatch := flag.Bool("mal", false, "")
 	flag.Usage = func() { fmt.Println(); printHelp(false) }
 	flag.Parse()
 
 	if *help || *helpVerbose {
 		printHelp(*helpVerbose)
+		os.Exit(0)
+	}
+
+	if *getPlanToWatch {
+		planToWatch := GetPlanToWatchAnime()
+		var planToWatchString strings.Builder
+		for _, anime := range planToWatch {
+			planToWatchString.WriteString(anime)
+			planToWatchString.WriteRune('|')
+			planToWatchString.WriteString(anime)
+			planToWatchString.WriteRune('\n')
+		}
+		outputFile := "anime.txt"
+		err := os.WriteFile(outputFile, []byte(planToWatchString.String()), 0666)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Succesfully Generated: %s", outputFile)
 		os.Exit(0)
 	}
 
@@ -172,7 +192,7 @@ func writeJson(outputFilePath string, rssFeedUrl string, downloadDir string, dow
 		}
 		jsonData := fmt.Sprintf(
 			`
-            "%s": {
+        "%s": {
             "addPaused": null,
             "affectedFeeds": [
             "%s"

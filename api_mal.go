@@ -65,10 +65,7 @@ type Season struct {
 	Year   int
 }
 
-// Winter 2025
-// [60108, 21, 55318, 58514, 56752, 58567, 54857, 57533, 51119, 59055, 57648, 59730, 59142, 53876, 58484, 59914, 55842, 54437, 54717, 58066, 56566, 6149, 56653, 1199, 56135, 8687, 59226, 56662, 59136, 59514, 57719, 52215, 57592, 56894, 56701, 57616, 966, 52995, 58572, 57181, 58939, 57066, 235, 49981, 1960, 57924, 32353, 57946, 53907, 59135, 58600, 59361, 53924, 55071, 55997, 58271, 57554, 58822, 8336, 57798, 59144, 50607, 37096, 42295, 4459, 58395, 58853, 60410, 59349, 54769, 50418, 58259, 57796, 58739, 59002, 59265, 58437, 58082, 56647, 56420, 57050, 59113, 2406, 60516, 59732, 59752, 54667, 59387, 60576, 60565, 59031, 58379, 59740, 59881, 58604, 58557, 60558, 60749, 56484, 60561, 60567, 59512, 59409, 60746, 60736, 60681, 60690, 60670, 60453, 60712, 60772, 60771, 60737, 60766, 60613, 60680, 60677, 60034, 60207, 60669, 59894, 60672, 60742, 60671, 59884, 59883, 58827, 59406, 60273, 59489, 60407, 49363, 54144, 60537, 58137, 30151, 59490, 60425, 59957, 59843, 58964, 54740, 59408, 60666, 48442, 52967, 59419, 60094, 57827, 59980, 30119, 60557, 22669, 59729, 38099, 57357, 41458, 54871, 59685, 38776, 59499, 60544, 10506, 57101, 60045, 58351, 18941, 60541, 53408]
-
-func getPlanToWatch(accessToken string, season Season) []string {
+func planToWatchApiCall(accessToken string, season Season) []string {
 	planToWatchAnime := make([]string, 0)
 
 	params := url.Values{}
@@ -134,12 +131,12 @@ type AuthToken struct {
 
 const TOKEN_FILE = "token.json"
 
-func api_mal() {
+func GetPlanToWatchAnime() []string {
 	var tokenString []byte
 	tokenString, err := os.ReadFile(TOKEN_FILE)
 	if os.IsNotExist(err) {
 		accessTokenString := requestAccessToken()
-		// TODO: add a newline at the end of file
+		accessTokenString = append(accessTokenString, '\n')
 		err := os.WriteFile(TOKEN_FILE, accessTokenString, 0666)
 		if err != nil {
 			log.Fatal(err)
@@ -153,8 +150,7 @@ func api_mal() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Making Request")
+	fmt.Println("Retrieving Plan To Watch List from MyAnimeList API...")
 	// TODO: get season from the current date
-	planToWatchAnime := getPlanToWatch(accessToken.AccessToken, Season{"spring", 2025})
-	fmt.Println(planToWatchAnime)
+	return planToWatchApiCall(accessToken.AccessToken, Season{"spring", 2025})
 }
