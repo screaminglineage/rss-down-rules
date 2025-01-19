@@ -121,14 +121,10 @@ func main() {
 		planToWatch := GetPlanToWatchAnime()
 		var planToWatchString strings.Builder
 		for _, anime := range planToWatch {
-			planToWatchString.WriteString(anime)
-			planToWatchString.WriteRune('|')
-			planToWatchString.WriteString(anime)
-			planToWatchString.WriteRune('\n')
+			fmt.Fprintf(&planToWatchString, "%s|%s\n", anime, anime)
 		}
 		outputFile := "anime.txt"
-		err := os.WriteFile(outputFile, []byte(planToWatchString.String()), 0666)
-		if err != nil {
+		if err := os.WriteFile(outputFile, []byte(planToWatchString.String()), 0666); err != nil {
 			log.Fatal(err)
 		}
 		log.Printf("Succesfully Generated: %s", outputFile)
