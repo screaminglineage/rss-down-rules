@@ -35,8 +35,8 @@ func requestAccessToken() []byte {
 	params.Add("state", "RequestID2235")
 
 	authUrl := authorizeUrl + "?" + params.Encode()
-	fmt.Println(authUrl)
-	fmt.Print("Enter auth token: ")
+	fmt.Printf("Allow Access to MyAnimeList account using this URL:\n%s", authUrl)
+	fmt.Print("\n\nPaste auth token: ")
 	var authCode string
 	fmt.Scanf("%s", &authCode)
 
@@ -56,7 +56,7 @@ func requestAccessToken() []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Successfully generated Access Token!")
+	fmt.Println("\nSuccessfully generated Access Token!")
 	return body
 }
 
