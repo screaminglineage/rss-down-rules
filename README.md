@@ -17,8 +17,6 @@ The terms must be entered in this order but skipped terms will be ignored and se
 ## TODO
 - Implement auto detection of save path for both Linux and Windows
     - detect `$USER` directory for both
-- add command line flags to pass in save path/save path root
-- add command line flag to pass in RSS feed URL
 - maybe customize more features of the RSS feed generated
 
 
