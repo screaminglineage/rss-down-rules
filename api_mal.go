@@ -182,7 +182,7 @@ func GetPlanToWatchAnime(currentSeason bool) []string {
 			log.Fatal(err)
 		}
 		fmt.Printf("Saved Access Token in `%s`\n", TOKEN_FILE)
-		tokenString = []byte(accessTokenString)
+		tokenString = accessTokenString
 	}
 
 	var accessToken AuthToken
@@ -190,6 +190,8 @@ func GetPlanToWatchAnime(currentSeason bool) []string {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// Check here if the accessToken is still valid and if not then refresh it
+	// https://myanimelist.net/blog.php?eid=835707
 
 	var season Season
 	if currentSeason {
