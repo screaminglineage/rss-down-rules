@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"time"
 	"unicode"
 )
@@ -131,8 +132,6 @@ type AuthToken struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-const defaultTokenFile = "token.json"
-
 func getCurrentSeason() Season {
 	year, month, _ := time.Now().Date()
 	var season string
@@ -172,15 +171,35 @@ func getNextSeason() Season {
 }
 
 func GetPlanToWatchAnime(currentSeason bool) []string {
-	accessTokenString, err := os.ReadFile(defaultTokenFile)
-	if os.IsNotExist(err) {
-		accessTokenString = requestAccessToken()
-		accessTokenString = append(accessTokenString, '\n')
-		err := os.WriteFile(defaultTokenFile, accessTokenString, 0666)
+	defaultTokenFilePath := func() string {
+		configDir, err := os.UserConfigDir()
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("Saved Access Token in `%s`\n", defaultTokenFile)
+		return filepath.Join(configDir, "rss_download_rules", "token.json")
+	}
+
+	var tokenFilePath string
+	if tokenFilePath = os.Getenv("RSS_DOWNLOAD_RULES_TOKEN_PATH"); tokenFilePath == "" {
+		tokenFilePath = defaultTokenFilePath()
+	}
+
+	accessTokenString, err := os.ReadFile(tokenFilePath)
+	if os.IsNotExist(err) {
+		accessTokenString = requestAccessToken()
+		accessTokenString = append(accessTokenString, '\n')
+		err := os.WriteFile(tokenFilePath, accessTokenString, 0666)
+		if os.IsNotExist(err) {
+			if err := os.MkdirAll(filepath.Dir(tokenFilePath), 0777); err != nil {
+				log.Fatal(err)
+			}
+			if err := os.WriteFile(tokenFilePath, accessTokenString, 0666); err != nil {
+				log.Fatal(err)
+			}
+		} else if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("Saved Access Token in `%s`\n", tokenFilePath)
 	} else if err != nil {
 		log.Fatal(err)
 	}
