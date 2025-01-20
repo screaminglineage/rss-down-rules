@@ -35,7 +35,7 @@ func requestAccessToken() []byte {
 	params.Add("state", "RequestID2235")
 
 	authUrl := authorizeUrl + "?" + params.Encode()
-	fmt.Printf("Allow Access to MyAnimeList account using this URL:\n%s", authUrl)
+	fmt.Printf("Allow access to MyAnimeList account using this URL:\n%s", authUrl)
 	fmt.Print("\n\nPaste auth token: ")
 	var authCode string
 	fmt.Scanf("%s", &authCode)
@@ -131,7 +131,7 @@ type AuthToken struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-const TOKEN_FILE = "token.json"
+const defaultTokenFile = "token.json"
 
 func getCurrentSeason() Season {
 	year, month, _ := time.Now().Date()
@@ -172,21 +172,21 @@ func getNextSeason() Season {
 }
 
 func GetPlanToWatchAnime(currentSeason bool) []string {
-	var tokenString []byte
-	tokenString, err := os.ReadFile(TOKEN_FILE)
+	accessTokenString, err := os.ReadFile(defaultTokenFile)
 	if os.IsNotExist(err) {
-		accessTokenString := requestAccessToken()
+		accessTokenString = requestAccessToken()
 		accessTokenString = append(accessTokenString, '\n')
-		err := os.WriteFile(TOKEN_FILE, accessTokenString, 0666)
+		err := os.WriteFile(defaultTokenFile, accessTokenString, 0666)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("Saved Access Token in `%s`\n", TOKEN_FILE)
-		tokenString = accessTokenString
+		fmt.Printf("Saved Access Token in `%s`\n", defaultTokenFile)
+	} else if err != nil {
+		log.Fatal(err)
 	}
 
 	var accessToken AuthToken
-	err = json.Unmarshal(tokenString, &accessToken)
+	err = json.Unmarshal(accessTokenString, &accessToken)
 	if err != nil {
 		log.Fatal(err)
 	}
