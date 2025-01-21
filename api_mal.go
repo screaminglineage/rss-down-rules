@@ -15,7 +15,11 @@ import (
 	"unicode"
 )
 
-const MAL_API = "https://api.myanimelist.net/v2"
+const apiEndpoint = "https://api.myanimelist.net/v2"
+const oauthEndpoint = "https://api.myanimelist.net/v1/oauth2"
+const clientId = "f0329e8fef42bf30a44e42dd24e25675"
+const envVarName = "RSS_DOWNLOAD_RULES_TOKEN_PATH"
+const programName = "rss_download_rules"
 
 func generateCodeChallenge() string {
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-_~")
@@ -28,10 +32,10 @@ func generateCodeChallenge() string {
 
 func requestAccessToken() []byte {
 	codeChallenge := generateCodeChallenge()
-	authorizeUrl := "https://myanimelist.net/v1/oauth2/authorize"
+	authorizeUrl := oauthEndpoint + "/authorize"
 	params := url.Values{}
 	params.Add("response_type", "code")
-	params.Add("client_id", "f0329e8fef42bf30a44e42dd24e25675")
+	params.Add("client_id", clientId)
 	params.Add("code_challenge", codeChallenge)
 	params.Add("state", "RequestID2235")
 
@@ -41,9 +45,9 @@ func requestAccessToken() []byte {
 	var authCode string
 	fmt.Scanf("%s", &authCode)
 
-	oauthUrl := "https://myanimelist.net/v1/oauth2/token"
+	oauthUrl := oauthEndpoint + "/token"
 	params = url.Values{}
-	params.Add("client_id", "f0329e8fef42bf30a44e42dd24e25675")
+	params.Add("client_id", clientId)
 	params.Add("code", authCode)
 	params.Add("code_verifier", codeChallenge)
 	params.Add("grant_type", "authorization_code")
@@ -61,6 +65,26 @@ func requestAccessToken() []byte {
 	return body
 }
 
+func refreshAccessToken(refreshToken string) []byte {
+	oauthUrl := oauthEndpoint + "/token"
+	params := url.Values{}
+	params.Add("client_id", clientId)
+	params.Add("grant_type", "refresh_token")
+	params.Add("refresh_token", refreshToken)
+
+	res, err := http.Post(oauthUrl, "application/x-www-form-urlencoded", bytes.NewBufferString(params.Encode()))
+	body, err := io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode > 299 {
+		log.Fatalf("Response failed with code: %d and body: \n%s", res.StatusCode, body)
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Successfully refreshed Access Token!")
+	return body
+}
+
 type Season struct {
 	// season must be one of "winter",
 	// "summer", "spring", or "fall"
@@ -74,7 +98,7 @@ func planToWatchApiCall(accessToken string, season Season) []string {
 	params := url.Values{}
 	params.Add("status", "plan_to_watch")
 	params.Add("fields", "start_season")
-	url := fmt.Sprintf("%s/users/@me/animelist?%s", MAL_API, params.Encode())
+	url := fmt.Sprintf("%s/users/@me/animelist?%s", apiEndpoint, params.Encode())
 	for {
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
@@ -176,11 +200,11 @@ func GetPlanToWatchAnime(currentSeason bool) []string {
 		if err != nil {
 			log.Fatal(err)
 		}
-		return filepath.Join(configDir, "rss_download_rules", "token.json")
+		return filepath.Join(configDir, programName, "token.json")
 	}
 
 	var tokenFilePath string
-	if tokenFilePath = os.Getenv("RSS_DOWNLOAD_RULES_TOKEN_PATH"); tokenFilePath == "" {
+	if tokenFilePath = os.Getenv(envVarName); tokenFilePath == "" {
 		tokenFilePath = defaultTokenFilePath()
 	}
 
@@ -209,8 +233,25 @@ func GetPlanToWatchAnime(currentSeason bool) []string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Check here if the accessToken is still valid and if not then refresh it
-	// https://myanimelist.net/blog.php?eid=835707
+
+	// Checking if the token is still valid
+	info, err := os.Stat(tokenFilePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	modifiedTimeSecs := info.ModTime().Second()
+
+	if time.Now().Second()-modifiedTimeSecs >= accessToken.ExpiresIn {
+		fmt.Println("Refreshing Access Token...")
+		accessTokenString := refreshAccessToken(accessToken.RefreshToken)
+		accessTokenString = append(accessTokenString, '\n')
+		if err := os.WriteFile(tokenFilePath, accessTokenString, 0666); err != nil {
+			log.Fatal(err)
+		}
+		if err = json.Unmarshal(accessTokenString, &accessToken); err != nil {
+			log.Fatal(err)
+		}
+	}
 
 	var season Season
 	if currentSeason {
