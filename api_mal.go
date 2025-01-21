@@ -16,7 +16,7 @@ import (
 )
 
 const apiEndpoint = "https://api.myanimelist.net/v2"
-const oauthEndpoint = "https://api.myanimelist.net/v1/oauth2"
+const oauthEndpoint = "https://myanimelist.net/v1/oauth2"
 const clientId = "f0329e8fef42bf30a44e42dd24e25675"
 const envVarName = "RSS_DOWNLOAD_RULES_TOKEN_PATH"
 const programName = "rss_download_rules"
