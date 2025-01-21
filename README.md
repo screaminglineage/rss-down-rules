@@ -15,7 +15,6 @@ The terms must be entered in this order but skipped terms will be ignored and se
 
 
 ## TODO
-- Look into refreshing the API token when it expires
 - maybe customize more features of the RSS feed generated
 
 
