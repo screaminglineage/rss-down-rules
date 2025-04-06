@@ -134,7 +134,7 @@ func main() {
 	}
 
 	if *currentSeason {
-		fmt.Printf("Option `-c` can only be applied with `-mal`\n")
+		fmt.Printf("Option `-c` can only be applied to option `-mal`\n\n")
 		printHelp(false)
 		os.Exit(1)
 	}

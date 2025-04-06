@@ -240,7 +240,7 @@ func GetPlanToWatchAnime(currentSeason bool) []string {
 		log.Fatal(err)
 	}
 
-	if time.Now().Sub(info.ModTime()) >= time.Duration(accessToken.ExpiresIn) {
+	if time.Now().Sub(info.ModTime()) >= time.Duration(accessToken.ExpiresIn) * time.Second {
 		fmt.Println("Refreshing Access Token...")
 		accessTokenString := refreshAccessToken(accessToken.RefreshToken)
 		accessTokenString = append(accessTokenString, '\n')
