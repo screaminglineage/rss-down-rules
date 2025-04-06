@@ -133,6 +133,12 @@ func main() {
 		os.Exit(0)
 	}
 
+	if *currentSeason {
+		fmt.Printf("Option `-c` can only be applied with `-mal`\n")
+		printHelp(false)
+		os.Exit(1)
+	}
+
 	// Generating rss feed from input file
 	if flag.NArg() == 0 {
 		fmt.Printf("No input file provided!\n\n")
