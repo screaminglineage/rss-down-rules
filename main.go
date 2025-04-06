@@ -211,8 +211,27 @@ func writeJson(outputFilePath string, rssFeedUrl string, downloadDir string, dow
             "savePath": "%s",
             "smartFilter": true,
             "torrentContentLayout": null,
+            "torrentParams": {
+                "category": "",
+                "download_limit": -1,
+                "download_path": "",
+                "inactive_seeding_time_limit": -2,
+                "operating_mode": "AutoManaged",
+                "ratio_limit": 1,
+                "save_path": "%s",
+                "seeding_time_limit": -2,
+                "share_limit_action": "Remove",
+                "skip_checking": false,
+                "ssl_certificate": "",
+                "ssl_dh_params": "",
+                "ssl_private_key": "",
+                "tags": [
+                ],
+                "upload_limit": -1,
+                "use_auto_tmm": false
+            },
             "useRegex": false
-            }`, title.Title, rssFeedUrl, title.SearchTerm, title.SavePath)
+        }`, title.Title, rssFeedUrl, title.SearchTerm, title.SavePath, title.SavePath)
 		jsonString = append(jsonString, jsonData...)
 
 		// Skip Trailing Comma
