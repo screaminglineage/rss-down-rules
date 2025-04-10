@@ -37,12 +37,15 @@ Automatically generates a JSON file containing RSS downloader rules for qbittorr
     Eg:-
     hunter x hunter|Hunter x Hunter|/home/$USER/Videos/Hunter x Hunter
 
+    (Note that $USER is not automatically replaced by the username, it's
+    just used as a placeholder value here)
+
     The terms must be entered in this order but skipped terms will
-    be ignored and set to the default values --
+    be ignored and set to these default values --
 
     'Search Term' - Cannot be Skipped
     'Entry Title' - Will be set to same as the Search Term
-    'Save Path' - Will be set to /home/aditya/Videos/Anime/[Search Term]`
+    'Save Path' - Will be set to /home/$USER/Videos/Anime/[Search Term]`
 
 	options :=
 		`positional arguments:
