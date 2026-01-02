@@ -16,7 +16,7 @@ const defaultRssFeedUrl = "https://subsplease.org/rss/?t&r=1080"
 
 // TODO: get $USER from env
 const animeDirLinux = "/home/aditya/Videos/Anime/"
-const animeDirWindows = `D:\\Libraries\\Videos\\Anime\\`
+const animeDirWindows = `C:\\Users\\Aditya\\Videos\\Anime\\`
 const defaultPlatform = "all"
 
 var downloadDirMap = map[string]string{
