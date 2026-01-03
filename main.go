@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const defaultRssFeedUrl = "https://subsplease.org/rss/?t&r=1080"
+const defaultRssFeedUrl = "https://subsplease.org/rss/?r=1080"
 
 // Default Values (if not specified)
 
